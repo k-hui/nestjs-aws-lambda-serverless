@@ -1,0 +1,46 @@
+service: nestjs-aws-lambda-serverless
+frameworkVersion: '^3'
+useDotenv: true
+
+provider:
+  name: aws
+  runtime: nodejs16.x
+  region: us-east-1
+  profile: dev
+  memorySize: 128
+  timeout: 15
+  environment:
+    STAGE: ${sls:stage}
+
+custom:
+  serverless-offline:
+    noPrependStageInUrl: true
+  optimize:
+    external: ['swagger-ui-dist']
+  serverless-offline-watcher:
+    - path:
+        - src
+      command: echo "[serverless] src folder was modified."
+
+package:
+  individually: true
+
+functions:
+  main:
+    handler: src/lambda.handler
+    package:
+      patterns:
+        - '!node_modules/@aws-sdk'
+        - '!node_modules/aws-sdk'
+    environment:
+      NODE_PATH: './:/opt/node_modules'
+    events:
+      - httpApi:
+          method: '*'
+          path: '*'
+
+plugins:
+  - serverless-plugin-typescript
+  - serverless-plugin-optimize
+  - serverless-offline
+  - serverless-offline-watcher
